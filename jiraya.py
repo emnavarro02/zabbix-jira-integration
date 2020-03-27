@@ -4,27 +4,10 @@ import sys
 import jira_helper
 import zabbix_helper
 
-# script  = sys.argv[0]
-# send_to = sys.argv[1]
-# subject = sys.argv[2]
-# message = sys.argv[3]
-
-script  = ".jiraya.py"
-send_to = "DE3318939"
-subject = "Problem: CloudHealth service is not running"
-message = """Trigger: CloudHealth service is not running
-Trigger status: OK
-Trigger severity: Average
-Trigger URL:
-Instance ID: i-ac5d6bba
-EC2 Name: {{ pillar['name']}}
-
-Item values:
-
-1. CloudHealth Agent service (i-ac5d6bba:service.info[CHTAgent,state]): Running (0)
-
-Original event ID: 2240011"""
-
+script  = sys.argv[0]
+send_to = sys.argv[1]
+subject = sys.argv[2]
+message = sys.argv[3]
 
 # Retrieve parameters from Zabbix Alert message
 params = jira_helper.parse_zabbix_message(message)
