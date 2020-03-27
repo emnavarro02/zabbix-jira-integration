@@ -1,0 +1,5 @@
+# python requirements
+requests
+pyzabbix
+jira
+logging
