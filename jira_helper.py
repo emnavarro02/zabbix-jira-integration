@@ -25,16 +25,14 @@ def parse_zabbix_message(message):
         by using: dict.get("Original event ID")
         
         ~~~
-        Trigger: CloudHealth service is not running
-        Trigger status: PROBLEM
-        Trigger severity: Average
-        Trigger URL:
-        Instance ID: i-ac5d6bba
-        EC2 Name: SOME-INSTANCE
+            Problem: CloudHealth service is not running on i-ac5d6bba
 
-        1. CloudHealth Agent service (i-ac5d6bba:service.info[CHTAgent,state]): Running (0)
+            Problem started at 18:10:49 on 2020.03.30
+            Problem name: CloudHealth service is not running on i-ac5d6bba
+            Host: i-ac5d6bba
+            Severity: Average
 
-        Original event ID: 2266882
+            Original problem ID: 2273037
         ~~~
     """
     dict = {}
@@ -55,7 +53,8 @@ def mount_jira_ticket_subject(instance_id,subject,zabbix_event_id):
         - subject     (String) : The zabbix alert title
         - zabbix_event_id (String) : Zabbix original Event ID
     Returns : (String)'''
-    title = instance_id + " - " + subject + " (" + zabbix_event_id.lstrip() + ")"
+    title = subject + " (" + zabbix_event_id.lstrip() + ")"
+    # title = instance_id + " - " + subject + " (" + zabbix_event_id.lstrip() + ")"
     return title
 
 def create_new_ticket(subject,description,project_key="CCM"):
