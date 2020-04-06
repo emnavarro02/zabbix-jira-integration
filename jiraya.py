@@ -16,30 +16,27 @@ message = sys.argv[3]
 
 # Retrieve parameters from Zabbix Alert message
 params = jira_helper.parse_zabbix_message(message)
-logger.info("Parameters obtained")
+severity = params.get("severity")
+zabbix_event_id = params.get("eventid")
 
-instance_id = params.get("Host")
-zabbix_event_id = params.get("Original problem ID")
-logger.info("Instance ID: " + instance_id)
-logger.info("Event ID: " + zabbix_event_id)
+# Check if ticket is already opened
+logger.info("New alert received. Checking if there is a ticket in Taskbox")
+opened_tickets = jira_helper.opened_issues_amount(subject)
 
-title = jira_helper.mount_jira_ticket_subject(instance_id,subject,zabbix_event_id)
-logger.info("Creating a new ticket with the title: " + title)
+# if not, open a new ticket
+if (opened_tickets <= 0): 
+    logger.info("No ticket was found. Creating a new ticket in Taskbox.")
+    ticket_priority = jira_helper.priority_calculation(severity)
+    logger.info("Mapped alert  severity {zabbix_severity} to the Jira priority {jira_priority}".format(zabbix_severity=severity, jira_priority=ticket_priority))
+    new_ticket = jira_helper.create_new_ticket(subject,message,ticket_priority,send_to)
+    
+    # if ticket opened, acknowledge alert in Zabbix. 
+    if (new_ticket > 0):
+        logger.info("Ticket {ticket} have been created. Acknowledging Zabbix alert {zabbix_event_id}".format(ticket=new_ticket.key, zabbix_event_id=zabbix_event_id))
+        zabbix_helper.acknowledge_alert(zabbix_event_id,new_ticket.key)
+    else: 
+        logger.info("Zabbix alert was not updated because the ticket was not created.")
+else:
+    logger.info("An existing ticket has been found for this alert. Skipping.")
 
-ticket = jira_helper.create_new_ticket(title,message,"CCM")
-# Update Zabbix alert with ticket information. If ticket was opened
-if ticket:
-    logger.info("Created jira issue: " + ticket.key)
-    logger.info("Updating Zabbix alert with the new alert")
-    # Search for the alert in Zabbix
-    alert = zabbix_helper.search_alert(zabbix_event_id)
-    logger.info("Finding Zabbix alert to acknowledge: " + alert[0].get("eventid"))
-    # If alert exists
-    if alert:
-        jira_issue = ticket.key
-        # ACK the alert in Zabbix
-        zabbix_helper.acknowledge_alert(zabbix_event_id,jira_issue)
-    else:
-        logger.info("Alert not found in Zabbix.")
-else: 
-    logger.info("Zabbix alert not updated due Ticket not created.")
+# https://github.com/alerta/zabbix-alerta
