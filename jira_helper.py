@@ -1,12 +1,13 @@
 import os
 from jira import JIRA
 
-url      = os.getenv("jira_url")
-user     = os.getenv("jira_user")
+url = os.getenv("jira_url")
+user = os.getenv("jira_user")
 password = os.getenv("jira_password")
 # assignee = "zoicloud"
 
-jira = JIRA(options={'server':url}, basic_auth=(user,password))
+jira = JIRA(options={'server': url}, basic_auth=(user, password))
+
 
 def parse_zabbix_message(message):
     """ Creates a dictionary with  multiple reusable values from the original Zabbix message.
@@ -35,10 +36,11 @@ def parse_zabbix_message(message):
         value = line.split("=")
         if len(value) > 1:
             print(value)
-            dict[value[0]]=value[1].lstrip()
+            dict[value[0]] = value[1].lstrip()
     return dict
 
-def mount_jira_ticket_subject(instance_id,subject,zabbix_event_id,severity):
+
+def mount_jira_ticket_subject(instance_id, subject, zabbix_event_id, severity):
     '''Create the Jira Issue subject following the pattern:
     <instance_id> - <Zabbix alert title> (<zabbix event id>)
 
@@ -50,7 +52,8 @@ def mount_jira_ticket_subject(instance_id,subject,zabbix_event_id,severity):
     title = subject + " " + severity + " (" + zabbix_event_id.lstrip() + ")"
     return title
 
-def create_new_ticket(title,message,priority,assignee,reporter="zoirobot",project_key="CCM"):
+
+def create_new_ticket(title, message, priority, assignee, reporter="zoirobot", project_key="CCM"):
     '''Create a new JIRA issue.
 
         Params:
@@ -61,10 +64,11 @@ def create_new_ticket(title,message,priority,assignee,reporter="zoirobot",projec
             - project_key (String) : Jira project identification (default = CCM)
         Returns : (String)
     '''
-    ticket_dict = mount_ticket(title,message,project_key,assignee,priority)
+    ticket_dict = mount_ticket(title, message, project_key, assignee, priority)
     return jira.create_issue(fields=ticket_dict)
 
-def mount_ticket(subject,description,project_key,assignee,priority,issue_type="Incident"):
+
+def mount_ticket(subject, description, project_key, assignee, priority, issue_type="Incident"):
     '''Create a new ticket structure.
        ==============
 
@@ -82,10 +86,12 @@ def mount_ticket(subject,description,project_key,assignee,priority,issue_type="I
         'description': description,
         'issuetype': {'name': issue_type},
         'assignee': {'name': assignee},
-        'priority' : {'name' : priority},
-        'customfield_14401' : "ccm/504ecb37-a078-4fb0-a85b-90acf231053b" # Service Desk - Request type
+        'priority': {'name': priority},
+        # Service Desk - Request type
+        'customfield_14401': "ccm/504ecb37-a078-4fb0-a85b-90acf231053b"
     }
     return ticket
+
 
 def priority_calculation(severity):
     '''Maps the Zabbix alert severity to the Jira issue priority.
@@ -101,14 +107,15 @@ def priority_calculation(severity):
         'Warning (or bellow)' = "General guidance (Prio 4)"
         ~~~
     '''
-    if severity == "Disaster" : 
+    if severity == "Disaster":
         return "Production system down (Prio 2)"
-    # elif severity == "High": 
+    # elif severity == "High":
         # return "Production system down (Prio 2)"
-    elif severity == "Average" or severity == "High": 
+    elif severity == "Average" or severity == "High":
         return "System impaired (Prio 3)"
     else:
         return "General guidance (Prio 4)"
+
 
 def opened_issues_amount(subject):
     '''Search for opened JIRA issues with the same subject.
@@ -119,6 +126,7 @@ def opened_issues_amount(subject):
     query = "Summary ~ '" + subject + "' and Status != Done"
     opened_issues = jira.search_issues(query)
     return len(opened_issues)
+
 
 def opened_issues(subject):
     '''Search for opened JIRA issues with the same subject.
